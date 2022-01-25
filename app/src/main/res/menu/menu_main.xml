@@ -1,0 +1,42 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.markat.MainActivity">
+
+    <item
+        android:id="@+id/action_home"
+        android:icon="@drawable/ic_baseline_home_24"
+        android:orderInCategory="100"
+        android:title="Home"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_map"
+        android:icon="@drawable/ic_baseline_my_location_24"
+        android:orderInCategory="100"
+        android:title="Deine Umgebung" />
+    <item
+        android:id="@+id/action_products"
+        android:icon="@drawable/ic_baseline_shopping_bag_24"
+        android:orderInCategory="100"
+        android:title="Produkte" />
+    <item
+        android:id="@+id/action_account"
+        android:icon="@drawable/ic_baseline_account_box_24"
+        android:orderInCategory="100"
+        android:title="Account" />
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_baseline_settings_applications_24"
+        android:orderInCategory="100"
+        android:title="Einstellungen"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_blank"
+        android:orderInCategory="100"
+        android:title="" />
+    <item
+        android:id="@+id/action_logout"
+        android:icon="@drawable/ic_baseline_power_settings_new_24"
+        android:orderInCategory="100"
+        android:title="Logout" />
+</menu>

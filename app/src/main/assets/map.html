@@ -1,0 +1,133 @@
+<html>
+<head>
+
+	<title>Mobile tutorial - Leaflet</title>
+
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="">
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map {
+			width: 600px;
+			height: 400px;
+		}
+	</style>
+
+	<style>body { padding: 0; margin: 0; } #map { height: 100%; width: 100vw; }</style>
+</head>
+
+<body>
+
+<div id="map" class="leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0" style="position: relative;">
+	<div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;">
+		<div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(0px, 0px, 0px) scale(1);">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17486/11252?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(428px, 424px, 0px); opacity: 1;">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17486/11251?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(428px, -88px, 0px); opacity: 1;">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17485/11252?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(-84px, 424px, 0px); opacity: 1;">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17487/11252?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(940px, 424px, 0px); opacity: 1;">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17486/11253?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(428px, 936px, 0px); opacity: 1;">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17485/11251?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(-84px, -88px, 0px); opacity: 1;">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17487/11251?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(940px, -88px, 0px); opacity: 1;">
+			<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17485/11253?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(-84px, 936px, 0px); opacity: 1;">
+	<img alt="" role="presentation" src="https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/15/17487/11253?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw" class="leaflet-tile leaflet-tile-loaded" style="width: 512px; height: 512px; transform: translate3d(940px, 936px, 0px); opacity: 1;">
+		</div>
+	</div>
+	</div>
+		<div class="leaflet-pane leaflet-shadow-pane">
+			<img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png" class="leaflet-marker-shadow leaflet-zoom-animated" alt="" style="margin-left: -12px; margin-top: -41px; width: 41px; height: 41px; transform: translate3d(623px, 487px, 0px);">
+		</div>
+		<div class="leaflet-pane leaflet-overlay-pane">
+			<svg pointer-events="none" class="leaflet-zoom-animated" width="1494" height="1170" viewBox="-124 -97 1494 1170" style="transform: translate3d(-124px, -97px, 0px);">
+				<g>
+					<path class="leaflet-interactive" stroke="#3388ff" stroke-opacity="1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="#3388ff" fill-opacity="0.2" fill-rule="evenodd" d="M617.5600728169084,487.26146250776947a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 ">
+
+					</path>
+				</g>
+			</svg>
+		</div>
+		<div class="leaflet-pane leaflet-marker-pane">
+			<img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" alt="" tabindex="0" style="margin-left: -12px; margin-top: -41px; width: 25px; height: 41px; transform: translate3d(623px, 487px, 0px); z-index: 487;">
+		</div>
+		<div class="leaflet-pane leaflet-tooltip-pane">
+		</div>
+		<div class="leaflet-pane leaflet-popup-pane">
+			<div class="leaflet-popup  leaflet-zoom-animated" style="opacity: 1; transform: translate3d(624px, 453px, 0px); bottom: -7px; left: -138px;">
+				<div class="leaflet-popup-content-wrapper">
+					<div class="leaflet-popup-content" style="width: 235px;">
+						You are within 8.2595 meters from this point
+					</div>
+				</div><div class="leaflet-popup-tip-container">
+				<div class="leaflet-popup-tip">
+
+				</div>
+			</div>
+				<a class="leaflet-popup-close-button" href="#close">
+					×
+				</a>
+			</div>
+		</div>
+		<div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(8.95303e+06px, 5.76109e+06px, 0px) scale(32768);">
+
+		</div>
+	</div>
+	<div class="leaflet-control-container">
+		<div class="leaflet-top leaflet-left">
+			<div class="leaflet-control-zoom leaflet-bar leaflet-control">
+				<a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in">
+					+
+				</a>
+				<a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out">
+					−
+				</a>
+			</div>
+		</div>
+		<div class="leaflet-top leaflet-right">
+
+		</div>
+		<div class="leaflet-bottom leaflet-left">
+
+		</div>
+		<div class="leaflet-bottom leaflet-right">
+			<div class="leaflet-control-attribution leaflet-control">
+				<a href="https://leafletjs.com" title="A JS library for interactive maps">
+					Leaflet
+				</a>
+				| Map data ©
+				<a href="https://www.openstreetmap.org/copyright">
+					OpenStreetMap
+				</a> contributors, Imagery ©
+				<a href="https://www.mapbox.com/">
+					Mapbox
+				</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	var latitude = app.getLatitude();
+	var longitude = app.getLongitude();
+
+	var map = L.map('map').setView([latitude, longitude], 13);
+
+	var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+		maxZoom: 20,
+		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+		id: 'mapbox/streets-v11',
+		tileSize: 512,
+		zoomOffset: -1
+	}).addTo(map);
+
+</script>
+</body>
+</html>
