@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.markat.api.HttpsUtils;
+import com.example.markat.api.APIHttpsUtils;
 import com.example.markat.databinding.ActivityLoginBinding;
 import com.example.markat.models.User;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -74,7 +74,7 @@ public class LoginActivity extends AppCompatActivity {
         rp.add("email", email);
         rp.add("password", password);
 
-        HttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
+        APIHttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
@@ -129,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
         rp.add("month", String.valueOf(month));
         rp.add("day", String.valueOf(day));
 
-        HttpsUtils.post(postLoginUrl, rp, new JsonHttpResponseHandler() {
+        APIHttpsUtils.post(postLoginUrl, rp, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 

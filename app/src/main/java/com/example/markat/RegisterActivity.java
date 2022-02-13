@@ -12,7 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.markat.api.HttpsUtils;
+import com.example.markat.api.APIHttpsUtils;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
@@ -137,7 +137,7 @@ public class RegisterActivity extends AppCompatActivity {
         RequestParams rp = new RequestParams();
         rp.add("email", email);
 
-        HttpsUtils.get(getUrl, rp, new JsonHttpResponseHandler() {
+        APIHttpsUtils.get(getUrl, rp, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
@@ -193,7 +193,7 @@ public class RegisterActivity extends AppCompatActivity {
         rp.add("day", String.valueOf(day));
         rp.add("premium", "false");
 
-        HttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
+        APIHttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 

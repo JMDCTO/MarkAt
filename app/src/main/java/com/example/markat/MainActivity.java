@@ -17,23 +17,29 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.example.markat.api.HttpsUtils;
+import com.example.markat.api.APIHttpsUtils;
 import com.example.markat.fragments.AccountFragment;
 import com.example.markat.fragments.HomeFragment;
 import com.example.markat.fragments.LocationPopup;
 import com.example.markat.fragments.MapFragment;
 import com.example.markat.fragments.ProductsFragment;
 import com.example.markat.fragments.SystemSettingsFragment;
+import com.example.markat.models.BusinessHome;
+import com.example.markat.models.BusinessMap;
 import com.example.markat.models.User;
 import com.example.markat.models.UserLocation;
 import com.example.markat.utils.NavigationDrawerManager;
@@ -48,6 +54,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -74,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     Context context = this;
 
+    private List<BusinessHome> businessForScrollbar = new ArrayList<BusinessHome>();
+    private List<BusinessMap> businessForMapMarkers = new ArrayList<BusinessMap>();
+
     //Location
     private FusedLocationProviderClient fusedLocationClient;
     double latitude;
@@ -84,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private final String postUrl = "/users/location";
     private final String logoutUrl = "/users/sessions";
+    private final String businessUrl = "/business";
+    private final String businessLogoUrl = "/business/logos";
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
@@ -173,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Objects.requireNonNull(getSupportActionBar()).setSubtitle("Standort: " + userLocation.getCity());
 
             if (mapFragment != null && mapFragment.isPresent()) {
-                mapFragment.refreshMap();
+                mapFragment.passUserMainLocation(city);
             }
         }
     }
@@ -209,6 +221,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     manager.beginTransaction().replace(R.id.fragment_container, homeFragment).commit();
                     navigationManager.setNavigationViewChecked("HOME");
                     drawer.closeDrawers();
+                    if(businessForMapMarkers != null) {
+                        homeFragment.passDetailedInfo(businessForMapMarkers);
+                    }
 
                 break;
 
@@ -221,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mapFragment = new MapFragment(this, requestPermissionLauncher, userLocation.getLatitude(), userLocation.getLongitude());
                 mapFragment.isPresent(true);
+                mapFragment.passMapInfo(this.businessForMapMarkers, userLocation.getCity());
                 manager.beginTransaction().replace(R.id.fragment_container, mapFragment).commit();
                 navigationManager.setNavigationViewChecked("MAP");
                 drawer.closeDrawers();
@@ -298,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         rp.add("month", String.valueOf(month));
         rp.add("day", String.valueOf(day));
 
-        HttpsUtils.post(logoutUrl, rp, new JsonHttpResponseHandler() {
+        APIHttpsUtils.post(logoutUrl, rp, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
@@ -423,6 +439,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
+        /*
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
             fusedLocationClient.getLastLocation()
@@ -434,6 +451,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                     });
         }
+         */
     }
 
     @Override
@@ -495,6 +513,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             userLocation = new UserLocation(cityName, longitude, latitude);
 
+            requestMarkerInfoForMap(cityName);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -508,6 +528,134 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         sendLocationData(location.getLongitude(), location.getLatitude());
     }
 
+    private void requestMarkerInfoForMap(String cityName) {
+
+        RequestParams rp = new RequestParams();
+        rp.add("method", "GET_PARTNERS");
+        rp.add("city", cityName);
+
+        APIHttpsUtils.post(businessUrl, rp, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+                Log.d("POST_METHOD_GET_PARTNERS", "---------------- this is response : " + response);
+                try {
+                    JSONObject serverResp = new JSONObject(response.toString());
+                    JSONArray data = serverResp.getJSONArray("partners");
+
+                    if(data.length() != 0) {
+
+                        for (int i = 0; i < data.length(); i++) {
+
+                            JSONObject partner = data.getJSONObject(i);
+                            String businessIdResponse = partner.getString("id");
+                            String officialOfResponse = partner.getString("official_name");
+                            String aliasOfResponse = partner.getString("alias");
+                            String streetOfResponse = partner.getString("street");
+                            String numberOfResponse = partner.getString("house_number");
+                            String postalOfResponse = partner.getString("postal");
+                            String latitudeOfResponse = partner.getString("latitude");
+                            String longitudeOfResponse = partner.getString("longitude");
+
+                            if(!businessIdResponse.equals("") && !aliasOfResponse.equals("")) {
+                                BusinessHome business = new BusinessHome(businessIdResponse, aliasOfResponse);
+                                businessForScrollbar.add(business);
+                                if(!latitudeOfResponse.equals("") && !longitudeOfResponse.equals("")) {
+                                    BusinessMap businessMap = new BusinessMap(businessIdResponse, officialOfResponse, aliasOfResponse, streetOfResponse, numberOfResponse, postalOfResponse, latitudeOfResponse, longitudeOfResponse);
+                                    businessForMapMarkers.add(businessMap);
+                                }
+                                Log.d("data", business.getAlias());
+                            }
+                        }
+                        homeFragment.passDetailedInfo(businessForMapMarkers);
+
+                    } else {
+                        Toast.makeText(context, "API Error when requesting partners", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d("Login cache error", errorResponse.toString());
+
+            }
+        });
+
+    }
+
+    private void requestLogos() {
+
+        RequestParams rp = new RequestParams();
+        rp.add("method", "GET_PARTNER_LOGOS");
+
+        for(BusinessMap business : this.businessForMapMarkers) {
+            rp.add("partner", business.getOfficial());
+        }
+
+        APIHttpsUtils.post(businessLogoUrl, rp, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+                Log.d("POST_METHOD_GET_LOGOS", "---------------- this is response : " + response);
+                try {
+                    JSONObject serverResp = new JSONObject(response.toString());
+                    JSONArray data = serverResp.getJSONArray("partners");
+
+                    if(data.length() != 0) {
+
+                        for (int i = 0; i < data.length(); i++) {
+
+                            JSONObject partner = data.getJSONObject(i);
+                            String nameOfResponse = partner.getString("official_name_business");
+                            String imageOfResponse = partner.getString("encode");
+
+                            parseImage(imageOfResponse);
+
+                            Log.d(String.valueOf(i), imageOfResponse);
+                            /*
+                            if(!businessIdResponse.equals("") && !aliasOfResponse.equals("")) {
+                                BusinessHome business = new BusinessHome(businessIdResponse, aliasOfResponse);
+                                businessForScrollbar.add(business);
+                                if(!latitudeOfResponse.equals("") && !longitudeOfResponse.equals("")) {
+                                    BusinessMap businessMap = new BusinessMap(businessIdResponse, aliasOfResponse, streetOfResponse, numberOfResponse, postalOfResponse, latitudeOfResponse, longitudeOfResponse);
+                                    businessForMapMarkers.add(businessMap);
+                                    requestLogos();
+                                }
+                                Log.d("data", business.getAlias());
+                            }
+                             */
+                        }
+                    } else {
+                        Toast.makeText(context, "API Error when requesting partners", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d("Login cache error", errorResponse.toString());
+
+            }
+        });
+
+
+    }
+
+    private void parseImage(String imageOfResponse) {
+
+        String image = imageOfResponse.replace("\n", "");
+        byte[] decodedString = Base64.decode(image, Base64.DEFAULT);
+
+        //BitmapFactory.Options options = new BitmapFactory.Options();
+        //Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+        Drawable imageDrawable = new BitmapDrawable(getResources(),BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
+
+        int a = 0;
+    }
+
     private void sendLocationData(double longitude, double latitude) {
 
         RequestParams rp = new RequestParams();
@@ -518,7 +666,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         rp.add("latitude", String.valueOf(latitude));
         rp.add("city", userLocation.getCity());
 
-        HttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
+        APIHttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
@@ -561,5 +709,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
 
+    }
+
+    public List<BusinessHome> getInfoForHomeFragment() {
+        return new ArrayList<BusinessHome>(this.businessForScrollbar);
+    }
+
+    public List<BusinessMap> getInfoForMapFragment() {
+        return new ArrayList<BusinessMap>(businessForMapMarkers);
     }
 }

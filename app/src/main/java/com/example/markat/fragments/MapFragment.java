@@ -22,8 +22,16 @@ import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import com.example.markat.R;
+import com.example.markat.models.BusinessMap;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -38,6 +46,10 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
     private double latitude;
     private double longitude;
 
+    private boolean hasAllInformation = false;
+
+    List<BusinessMap> markers;
+
     WebView myWebView;
     WebViewJavaScriptInterface jsInterface;
 
@@ -49,6 +61,7 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
         this.requestPermissionLauncher = requestPermissionLauncher;
         this.latitude = latitude;
         this.longitude = longitude;
+        jsInterface = new WebViewJavaScriptInterface(context, latitude, longitude);
     }
 
     /**
@@ -94,7 +107,6 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
         webSettings.setDomStorageEnabled(true);
         webSettings.setGeolocationEnabled(true);
         webSettings.setGeolocationDatabasePath(context.getFilesDir().getPath());
-        jsInterface = new WebViewJavaScriptInterface(context, latitude, longitude);
         myWebView.addJavascriptInterface(jsInterface, "app");
 
         myWebView.setWebChromeClient(new android.webkit.WebChromeClient() {
@@ -119,7 +131,6 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
                     // permission for a specific feature to behave as expected. In this UI,
                     // include a "cancel" or "no thanks" button that allows the user to
                     // continue using your app without granting the permission.
-                    //showInContextUI(...);
                     callback.invoke(origin, true, true);
 
                 } else {
@@ -134,21 +145,70 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
             }
         });
 
-        myWebView.loadUrl("file:///android_asset/map.html");
+        loadMap();
     }
 
-    public void refreshMap() {
+    public void passUserMainLocation(String city) {
 
         SharedPreferences preferences = context.getSharedPreferences("user_location", Context.MODE_PRIVATE);
         String lat = preferences.getString("latitude", "");
-        String longt = preferences.getString("longitude", "");
+        String longitude = preferences.getString("longitude", "");
 
-        if(lat != null && longt != null) {
-            jsInterface.setLatitude(Double.parseDouble(lat));
-            jsInterface.setLongitude(Double.parseDouble(longt));
+        if(lat != null && longitude != null) {
+            jsInterface.setUserLatitude(Double.parseDouble(lat));
+            jsInterface.setUserLongitude(Double.parseDouble(longitude));
+            jsInterface.setCity(city);
         }
-        myWebView.loadUrl("file:///android_asset/map.html");
+    }
 
+    public void passMapInfo(List<BusinessMap> markerList, String city) {
+        if(markerList.isEmpty()) {
+            this.markers = new ArrayList<BusinessMap>();
+        } else {
+            this.markers = new ArrayList<BusinessMap>(markerList);
+            setupMapWithMarkers(city);
+        }
+    }
+
+    public void setupMapWithMarkers(String city) {
+
+            String[] names = new String[markers.size()];
+            double[] latitudes = new double[markers.size()];
+            double[] longitudes = new double[markers.size()];
+            String[] streetNames = new String[markers.size()];
+            String[] houseNumbers = new String[markers.size()];
+            String[] postalCodes = new String[markers.size()];
+
+            for(int i = 0; i < markers.size(); i++) {
+                names[i] = this.markers.get(i).getAlias();
+                latitudes[i] = Double.parseDouble(this.markers.get(i).getLatitude());
+                longitudes[i] = Double.parseDouble(this.markers.get(i).getLongitude());
+                streetNames[i] = this.markers.get(i).getStreet();
+                houseNumbers[i] = this.markers.get(i).getNumber();
+                postalCodes[i] = this.markers.get(i).getPostal();
+            }
+
+            jsInterface.setNames(names);
+            jsInterface.setLatitudes(latitudes);
+            jsInterface.setLongitudes(longitudes);
+            jsInterface.setStreetNames(streetNames);
+            jsInterface.setHouseNumbers(houseNumbers);
+            jsInterface.setPostal(postalCodes);
+            jsInterface.setCity(city);
+
+        hasAllInformation = true;
+    }
+
+    public void loadMap() {
+        myWebView.loadUrl("file:///android_asset/map.html");
+    }
+
+    public void openBusinessActivity(int position) {
+        Toast.makeText(context, String.valueOf(position), Toast.LENGTH_SHORT).show();
+    }
+
+    public boolean hasAllInformation() {
+        return this.hasAllInformation;
     }
 
     @Override
@@ -159,39 +219,204 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
     public class WebViewJavaScriptInterface{
 
         private Context context;
-        double latitude;
-        double longitude;
+
+        private Runnable openBusiness;
+
+        double userLatitude;
+        double userLongitude;
+
+        String[] names;
+        String[] latitudes;
+        String[] longitudes;
+        String[] streetNames;
+        String[] houseNumbers;
+        String[] postal;
+        String city;
+
         /*
          * Need a reference to the context in order to sent a post message
          */
         public WebViewJavaScriptInterface(Context context, double latitude, double longitude){
             this.context = context;
-            this.latitude = latitude;
-            this.longitude = longitude;
+            this.userLatitude = latitude;
+            this.userLongitude = longitude;
         }
 
-        public void setLongitude(double longitude) {
-            this.longitude = longitude;
+        public void setUserLongitude(double userLongitude) {
+            this.userLongitude = userLongitude;
         }
 
-        public void setLatitude(double latitude) {
-            this.latitude = latitude;
+        public void setUserLatitude(double userLatitude) {
+            this.userLatitude = userLatitude;
         }
+
+        public void setNames(String[] names) {
+            this.names = names;
+        }
+
+        public void setLatitudes(double[] latitudes) {
+            String[] stringRep = new String[latitudes.length];
+
+            for(int i = 0; i < latitudes.length; i++) {
+                stringRep[i] = String.valueOf(latitudes[i]);
+            }
+            this.latitudes = stringRep;
+        }
+
+        public void setLongitudes(double[] longitudes) {
+            String[] stringRep = new String[longitudes.length];
+
+            for(int i = 0; i < longitudes.length; i++) {
+                stringRep[i] = String.valueOf(longitudes[i]);
+            }
+            this.longitudes = stringRep;
+        }
+
+        public void setStreetNames(String[] streetNames) {
+            this.streetNames = streetNames;
+        }
+
+        public void setHouseNumbers(String[] houseNumbers) {
+            this.houseNumbers = houseNumbers;
+        }
+
+        public void setCity(String city) {
+            this.city = city;
+        }
+
+        public void setPostal(String[] postals) {
+            this.postal = postals;
+        }
+
 
         /*
          * This method can be called from Android. @JavascriptInterface
          * required after SDK version 17.
          */
+
         @JavascriptInterface
         public double getLatitude(){
-            return latitude;
-            //return 49.016864;
+            return userLatitude;
         }
 
         @JavascriptInterface
         public double getLongitude() {
-            return longitude;
-            //return 12.097408;
+            return userLongitude;
+        }
+
+        @JavascriptInterface
+        public String getNames() {
+            JSONArray names;
+
+            try {
+                JSONArray myArray = new JSONArray(this.names);
+                names = myArray;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                names = new JSONArray();
+            }
+            String value = names.toString();
+            Log.d("values", value);
+            return value;
+        }
+
+        @JavascriptInterface
+        public String getLatitudes() {
+
+            JSONArray latitudes;
+
+            try {
+                JSONArray myArray = new JSONArray(this.latitudes);
+                latitudes = myArray;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                latitudes = new JSONArray();
+            }
+
+            return latitudes.toString();
+        }
+
+        @JavascriptInterface
+        public String getLongitudes() {
+            JSONArray longitudes;
+
+            try {
+                JSONArray myArray = new JSONArray(this.longitudes);
+                longitudes = myArray;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                longitudes = new JSONArray();
+            }
+            String value = longitudes.toString();
+            Log.d("values", value);
+            return value;
+
+        }
+
+        @JavascriptInterface
+        public String getStreetNames() {
+            JSONArray streetNames;
+
+            try {
+                JSONArray myArray = new JSONArray(this.streetNames);
+                streetNames = myArray;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                streetNames = new JSONArray();
+            }
+            String value = streetNames.toString();
+            Log.d("values", value);
+            return value;
+        }
+
+        @JavascriptInterface
+        public String getHouseNumbers() {
+
+            JSONArray houseNumbers;
+
+            try {
+                JSONArray myArray = new JSONArray(this.houseNumbers);
+                houseNumbers = myArray;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                houseNumbers = new JSONArray();
+            }
+            String value = houseNumbers.toString();
+            Log.d("values", value);
+            return value;
+        }
+
+        @JavascriptInterface
+        public String getCity() {
+            return city;
+        }
+
+        @JavascriptInterface
+        public String getPostal() {
+
+            JSONArray postalCodes;
+
+            try {
+                JSONArray myArray = new JSONArray(this.postal);
+                postalCodes = myArray;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                postalCodes = new JSONArray();
+            }
+            String value = postalCodes.toString();
+            Log.d("values", value);
+            return value;
+        }
+
+        @JavascriptInterface
+        public void openBusiness(int position) {
+            openBusinessActivity(position);
         }
     }
 }

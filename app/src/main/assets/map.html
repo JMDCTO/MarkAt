@@ -1,8 +1,5 @@
 <html>
 <head>
-
-	<title>Mobile tutorial - Leaflet</title>
-
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -116,6 +113,23 @@
 
 	var latitude = app.getLatitude();
 	var longitude = app.getLongitude();
+	var businessNames = JSON.parse(app.getNames());
+	var Latitudes = JSON.parse(app.getLatitudes());
+	var Longitudes = JSON.parse(app.getLongitudes());
+	var streetNames = JSON.parse(app.getStreetNames());
+	var houseNumbers = JSON.parse(app.getHouseNumbers());
+	var postalCodes = JSON.parse(app.getPostal());
+	var city = app.getCity();
+
+	var markers = [Latitudes.length];
+	var doubleLat = [Latitudes.length];
+	var doubleLong = [Longitudes.length];
+
+	for(let i = 0; i < Latitudes.length; i++) {
+		doubleLat[i] = parseFloat(Latitudes[i]);
+		doubleLong[i] = parseFloat(Longitudes[i]);
+
+	}
 
 	var map = L.map('map').setView([latitude, longitude], 13);
 
@@ -127,6 +141,23 @@
 		tileSize: 512,
 		zoomOffset: -1
 	}).addTo(map);
+
+	for(let j = 0; j < doubleLat.length; j++) {
+		var markerMessage = businessNames[j] + "<br /><br />" + streetNames[j] + " " + houseNumbers[j] + "<br />" + postalCodes[j] + ", " + city;
+		markers[j] = L.marker([doubleLat[j], doubleLong[j]]);
+
+		var content = L.DomUtil.create('div', 'content');
+		content.innerHTML = "<div id='info'><p id='title'>" + businessNames[j] + "</p><p>" + streetNames[j] + "</p></div>";
+    	var popup = L.popup().setContent(content);
+
+		L.DomEvent.addListener(content, 'click', function(event){
+			  console.log(j);
+  			  app.openBusiness(j);
+			});
+
+		markers[j].bindPopup(popup).openPopup();
+		markers[j].addTo(map);
+	}
 
 </script>
 </body>

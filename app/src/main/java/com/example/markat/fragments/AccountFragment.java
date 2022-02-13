@@ -21,7 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.markat.R;
-import com.example.markat.api.HttpsUtils;
+import com.example.markat.api.APIHttpsUtils;
 import com.example.markat.models.User;
 import com.example.markat.models.UserBillingAddress;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -220,7 +220,7 @@ public class AccountFragment extends Fragment {
             rp.add("postalcode", address.getPostalCode());
             rp.add("city", address.getCity());
 
-            HttpsUtils.post(postBillingAddressUrl, rp, new JsonHttpResponseHandler() {
+            APIHttpsUtils.post(postBillingAddressUrl, rp, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
@@ -251,11 +251,11 @@ public class AccountFragment extends Fragment {
         rp.add("id", String.valueOf(id));
         rp.add("method", "OWN_CREDENTIALS");
 
-        HttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
+        APIHttpsUtils.post(postUrl, rp, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
-                Log.d("POST_METHOD_LOGIN_USER", "---------------- this is response : " + response);
+                Log.d("POST_METHOD_ACCOUNT_DATA", "---------------- this is response : " + response);
                 try {
                     JSONObject serverResp = new JSONObject(response.toString());
                     JSONArray data = serverResp.getJSONArray("user");
