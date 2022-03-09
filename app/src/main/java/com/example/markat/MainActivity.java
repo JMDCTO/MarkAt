@@ -17,9 +17,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -36,12 +33,16 @@ import com.example.markat.fragments.AccountFragment;
 import com.example.markat.fragments.HomeFragment;
 import com.example.markat.fragments.LocationPopup;
 import com.example.markat.fragments.MapFragment;
-import com.example.markat.fragments.ProductsFragment;
+import com.example.markat.fragments.ProductBrowserFragment;
 import com.example.markat.fragments.SystemSettingsFragment;
 import com.example.markat.models.BusinessHome;
 import com.example.markat.models.BusinessMap;
+import com.example.markat.models.CustomCategory;
+import com.example.markat.models.CustomTag;
 import com.example.markat.models.User;
 import com.example.markat.models.UserLocation;
+import com.example.markat.utils.CustomDataHolder;
+import com.example.markat.utils.CustomFragmentManagement;
 import com.example.markat.utils.NavigationDrawerManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -62,6 +63,12 @@ import java.util.Objects;
 
 import cz.msebera.android.httpclient.Header;
 
+import static com.example.markat.utils.CustomFragmentManagement.CustomFragmentManager.FragmentType.ACCOUNT;
+import static com.example.markat.utils.CustomFragmentManagement.CustomFragmentManager.FragmentType.BUSINESS;
+import static com.example.markat.utils.CustomFragmentManagement.CustomFragmentManager.FragmentType.HOME;
+import static com.example.markat.utils.CustomFragmentManagement.CustomFragmentManager.FragmentType.MAP;
+import static com.example.markat.utils.CustomFragmentManagement.CustomFragmentManager.FragmentType.PRODUCT;
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, LocationListener {
 
     FragmentManager manager;
@@ -69,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     HomeFragment homeFragment;
     AccountFragment accountFragment;
     SystemSettingsFragment systemSettingsFragment;
-    ProductsFragment productsFragment;
+    ProductBrowserFragment productBrowserFragment;
     LocationPopup locationPopup;
 
     NavigationView navigationView;
@@ -78,17 +85,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DrawerLayout drawer;
     ActivityResultLauncher<String[]> requestPermissionLauncher;
     Toolbar toolbar;
-
     Context context = this;
 
     private List<BusinessHome> businessForScrollbar = new ArrayList<BusinessHome>();
     private List<BusinessMap> businessForMapMarkers = new ArrayList<BusinessMap>();
-
-    //Location
+    
     private FusedLocationProviderClient fusedLocationClient;
     double latitude;
     double longitude;
-
     private User user;
     private UserLocation userLocation;
 
@@ -96,6 +100,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final String logoutUrl = "/users/sessions";
     private final String businessUrl = "/business";
     private final String businessLogoUrl = "/business/logos";
+    private final String categoriesUrl = "/products/categories";
+    private final String tagsUrl = "/products/categories/tags";
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
@@ -104,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        CustomDataHolder.DataHolderObject dataHolder = new CustomDataHolder.DataHolderObject(this);
         toolbar = findViewById(R.id.toolbar_main);
         toolbar.setTitle("Home");
         toolbar.setSubtitle("Standort: dein Standort");
@@ -112,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
 
         manager = getSupportFragmentManager();
+        CustomFragmentManagement.CustomFragmentManager customFragmentManager = new CustomFragmentManagement.CustomFragmentManager(this, manager);
+        customFragmentManager.setFragmentType(HOME);
 
         drawer = findViewById(R.id.drawerLayout_main);
         toggle = new ActionBarDrawerToggle(
@@ -127,9 +136,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         getCurrentUserFromPreferences();
 
-        homeFragment = new HomeFragment(this, " ", String.valueOf(user.getId()));
+        homeFragment = new HomeFragment(this, " ", String.valueOf(user.getId()), () -> 
+          changeToolbarForBusiness(), () -> changeToolbarForProductBrowser());
         manager.beginTransaction().replace(R.id.fragment_container, homeFragment).commit();
-
+        homeFragment.setManager(manager);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(false);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         locationPopup = new LocationPopup(() -> refreshLocation(), this);
     }
 
@@ -157,10 +169,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-    // Handle item selection
         if (item.getItemId() == R.id.action_location) {
-            locationPopup.show(manager, "");
+            locationPopup.show(manager, "location");
             return true;
+        }
+        
+        if(item.getItemId() == R.id.action_shopping_cart) {
+          //Add functionality here
+          Toast.makeText(this, "Shopping Cart incoming", Toast.LENGTH_SHORT).show();
+          return true;
         }
         return false;
     }
@@ -199,10 +216,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
         int itemId = item.getItemId();
-
         if(navigationManager == null) {
             navigationManager = new NavigationDrawerManager(this, navigationView, drawer);
-
         }
         if(user != null) {
             navigationManager.setUsernameInTitle(user);
@@ -210,7 +225,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         switch (itemId) {
             case R.id.action_home:
-                    homeFragment = new HomeFragment(this, userLocation.getCity(), String.valueOf(user.getId()));
+                    homeFragment = new HomeFragment(this, userLocation.getCity(), String.valueOf(user.getId()), () ->
+                     changeToolbarForBusiness(), () -> changeToolbarForProductBrowser());
                     Objects.requireNonNull(getSupportActionBar()).setTitle("Home");
                     if (userLocation == null) {
                         getSupportActionBar().setSubtitle("Standort: Dein Standort");
@@ -218,13 +234,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         getSupportActionBar().setSubtitle("Standort: " + userLocation.getCity());
                     }
                     if (mapFragment != null) mapFragment.isPresent(false);
+                    CustomFragmentManagement.CustomFragmentManager.setFragmentType(HOME);
                     manager.beginTransaction().replace(R.id.fragment_container, homeFragment).commit();
+                    homeFragment.setManager(manager);
                     navigationManager.setNavigationViewChecked("HOME");
                     drawer.closeDrawers();
-                    if(businessForMapMarkers != null) {
-                        homeFragment.passDetailedInfo(businessForMapMarkers);
-                    }
-
                 break;
 
             case R.id.action_map:
@@ -234,24 +248,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     getSupportActionBar().setSubtitle("Standort: " + userLocation.getCity());
                 }
-                mapFragment = new MapFragment(this, requestPermissionLauncher, userLocation.getLatitude(), userLocation.getLongitude());
+                mapFragment = new MapFragment(this, requestPermissionLauncher, userLocation.getLatitude(), userLocation.getLongitude(), () -> {
+                    changeToolbarForBusiness();
+                });
                 mapFragment.isPresent(true);
                 mapFragment.passMapInfo(this.businessForMapMarkers, userLocation.getCity());
+                CustomFragmentManagement.CustomFragmentManager.setFragmentType(MAP);
                 manager.beginTransaction().replace(R.id.fragment_container, mapFragment).commit();
                 navigationManager.setNavigationViewChecked("MAP");
+                mapFragment.setManager(manager);
                 drawer.closeDrawers();
                 break;
 
             case R.id.action_products:
-                Objects.requireNonNull(getSupportActionBar()).setTitle("Produkte");
+                Objects.requireNonNull(getSupportActionBar()).setTitle("Produkt - Browser");
                 if(userLocation == null) {
                     getSupportActionBar().setSubtitle("Standort: Dein Standort");
                 } else {
                     getSupportActionBar().setSubtitle("Standort: " + userLocation.getCity());
                 }
-                productsFragment = new ProductsFragment(this);
+                productBrowserFragment = new ProductBrowserFragment(this, null);
                 if(mapFragment != null) mapFragment.isPresent(false);
-                manager.beginTransaction().replace(R.id.fragment_container, productsFragment).commit();
+                CustomFragmentManagement.CustomFragmentManager.setFragmentType(PRODUCT);
+                manager.beginTransaction().replace(R.id.fragment_container, productBrowserFragment).commit();
                 navigationManager.setNavigationViewChecked("PRODUCTS");
                 drawer.closeDrawers();
                 break;
@@ -265,6 +284,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 accountFragment = new AccountFragment(this, user);
                 if(mapFragment != null) mapFragment.isPresent(false);
+                CustomFragmentManagement.CustomFragmentManager.setFragmentType(ACCOUNT);
                 manager.beginTransaction().replace(R.id.fragment_container, accountFragment).commit();
                 navigationManager.setNavigationViewChecked("ACCOUNT");
                 drawer.closeDrawers();
@@ -327,11 +347,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject innerResponse = data.getJSONObject(i);
                             String logout = innerResponse.getString("logout");
-
                             if(logout.equals("true")) {
                                 sendUserBackToLogin();
                             }
-
                         }
                     } else {
                         Toast.makeText(context, "API Error when setting user location", Toast.LENGTH_SHORT).show();
@@ -343,14 +361,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                 Log.d("Login cache error", errorResponse.toString());
-
             }
         });
 
     }
 
     private void sendUserBackToLogin() {
-
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
     }
@@ -360,6 +376,80 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = findViewById(R.id.drawerLayout_main) ;
         if (drawer.isDrawerOpen(GravityCompat.START )) {
             drawer.closeDrawer(GravityCompat.START ) ;
+        }
+
+        switch (CustomFragmentManagement.CustomFragmentManager.getPresentFragment()) {
+            case HOME:
+                //Do nothing
+                break;
+            case PRODUCT:
+              if(CustomFragmentManagement.CustomFragmentManager.comingFrom() == HOME) {
+
+                homeFragment = new HomeFragment(this, userLocation.getCity(), String.valueOf(user.getId()), () -> 
+                  changeToolbarForBusiness(), () -> changeToolbarForProductBrowser());
+                Objects.requireNonNull(getSupportActionBar()).setTitle("Home");
+                if (userLocation == null) {
+                  getSupportActionBar().setSubtitle("Standort: Dein Standort");
+                } else {
+                  getSupportActionBar().setSubtitle("Standort: " + userLocation.getCity());
+                }
+                if (mapFragment != null) mapFragment.isPresent(false);
+                CustomFragmentManagement.CustomFragmentManager.setFragmentType(HOME);
+                manager.beginTransaction().replace(R.id.fragment_container, homeFragment).commit();
+                homeFragment.setManager(manager);
+                Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+                }
+                break;
+            case MAP:
+                if(CustomFragmentManagement.CustomFragmentManager.comingFrom() == BUSINESS) {
+
+                }
+                if(CustomFragmentManagement.CustomFragmentManager.comingFrom() == PRODUCT) {
+
+                }
+                //else do nothing
+                break;
+            case CART:
+                //switch to coming from fragment
+                break;
+            case BUSINESS:
+                if(CustomFragmentManagement.CustomFragmentManager.comingFrom() == MAP) {
+
+                    Objects.requireNonNull(getSupportActionBar()).setTitle("Deine Umgebung");
+                    if(userLocation == null) {
+                        getSupportActionBar().setSubtitle("Standort: Dein Standort");
+                    } else {
+                        getSupportActionBar().setSubtitle("Standort: " + userLocation.getCity());
+                    }
+                    mapFragment = new MapFragment(this, requestPermissionLauncher, userLocation.getLatitude(), userLocation.getLongitude(), () -> {
+                        changeToolbarForBusiness();
+                    });
+                    mapFragment.isPresent(true);
+                    mapFragment.passMapInfo(this.businessForMapMarkers, userLocation.getCity());
+                    CustomFragmentManagement.CustomFragmentManager.setFragmentType(MAP);
+                    manager.beginTransaction().replace(R.id.fragment_container, mapFragment).commit();
+                    mapFragment.setManager(manager);
+                    Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+                }
+
+                if(CustomFragmentManagement.CustomFragmentManager.comingFrom() == HOME) {
+                    homeFragment = new HomeFragment(this, userLocation.getCity(), String.valueOf(user.getId()), () ->
+                       changeToolbarForBusiness(), () -> changeToolbarForProductBrowser());
+                    Objects.requireNonNull(getSupportActionBar()).setTitle("Home");
+                    if (userLocation == null) {
+                        getSupportActionBar().setSubtitle("Standort: Dein Standort");
+                    } else {
+                        getSupportActionBar().setSubtitle("Standort: " + userLocation.getCity());
+                    }
+                    if (mapFragment != null) mapFragment.isPresent(false);
+                    CustomFragmentManagement.CustomFragmentManager.setFragmentType(HOME);
+                    manager.beginTransaction().replace(R.id.fragment_container, homeFragment).commit();
+                    homeFragment.setManager(manager);
+                    Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+                }
+                break;
+
+            default: break;
         }
     }
 
@@ -439,19 +529,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        /*
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, location -> {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            // Logic to handle location object
-                            processLocationData(location);
-                        }
-                    });
-        }
-         */
     }
 
     @Override
@@ -527,7 +604,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         sendLocationData(location.getLongitude(), location.getLatitude());
     }
-
     private void requestMarkerInfoForMap(String cityName) {
 
         RequestParams rp = new RequestParams();
@@ -567,8 +643,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 Log.d("data", business.getAlias());
                             }
                         }
-                        homeFragment.passDetailedInfo(businessForMapMarkers);
-
+                        requestLogos();
                     } else {
                         Toast.makeText(context, "API Error when requesting partners", Toast.LENGTH_SHORT).show();
                     }
@@ -585,78 +660,155 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void requestLogos() {
+  private void requestLogos() {
 
-        RequestParams rp = new RequestParams();
-        rp.add("method", "GET_PARTNER_LOGOS");
+    RequestParams rp = new RequestParams();
+    rp.add("method", "GET_PARTNER_LOGOS");
 
-        for(BusinessMap business : this.businessForMapMarkers) {
-            rp.add("partner", business.getOfficial());
+    for(BusinessMap business : this.businessForMapMarkers) {
+      rp.add("partner", business.getOfficial());
+    }
+
+    APIHttpsUtils.post(businessLogoUrl, rp, new JsonHttpResponseHandler() {
+      @Override
+      public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+        Log.d("POST_METHOD_GET_LOGOS", "---------------- this is response : " + response);
+        try {
+          JSONObject serverResp = new JSONObject(response.toString());
+          JSONArray data = serverResp.getJSONArray("partners");
+
+          if(data.length() != 0) {
+            for (int i = 0; i < data.length(); i++) {
+              JSONObject partner = data.getJSONObject(i);
+              String nameOfResponse = partner.getString("official_name_business");
+              String imageOfResponse = partner.getString("encode");
+              parseImagePartner(imageOfResponse, nameOfResponse);
+            }
+            
+          } else {
+            Toast.makeText(context, "API Error when requesting partners", Toast.LENGTH_SHORT).show();
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
         }
 
-        APIHttpsUtils.post(businessLogoUrl, rp, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+        CustomDataHolder.DataHolderObject.setLocalBusinesses(businessForMapMarkers);
+        requestCategories();
+        
+      }
+      @Override
+      public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+        Log.d("Login cache error", errorResponse.toString());
+      }
+    });
+  }
+  
+  public void requestCategories() {
+      
+    RequestParams rp = new RequestParams();
+    rp.add("method", "GET_CATEGORIES");
 
-                Log.d("POST_METHOD_GET_LOGOS", "---------------- this is response : " + response);
-                try {
-                    JSONObject serverResp = new JSONObject(response.toString());
-                    JSONArray data = serverResp.getJSONArray("partners");
+    APIHttpsUtils.post(categoriesUrl, rp, new JsonHttpResponseHandler() {
+      @Override
+      public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
 
-                    if(data.length() != 0) {
+        Log.d("POST_GET_CATEGORIES", "---------------- this is response : " + response);
+        List<CustomCategory> categories = new ArrayList<>();
 
-                        for (int i = 0; i < data.length(); i++) {
+        try {
+          JSONObject serverResp = new JSONObject(response.toString());
+          JSONArray data = serverResp.getJSONArray("categories");
+          
+          if(data.length() != 0) {
+            for (int i = 0; i < data.length(); i++) {
+              JSONObject category = data.getJSONObject(i);
+              String idOfResponse = category.getString("id");
+              String titleOfResponse = category.getString("title");
+              String descriptionOfResponse = category.getString("description");
+              String imageOfResponse = category.getString("encode");
 
-                            JSONObject partner = data.getJSONObject(i);
-                            String nameOfResponse = partner.getString("official_name_business");
-                            String imageOfResponse = partner.getString("encode");
-
-                            parseImage(imageOfResponse);
-
-                            Log.d(String.valueOf(i), imageOfResponse);
-                            /*
-                            if(!businessIdResponse.equals("") && !aliasOfResponse.equals("")) {
-                                BusinessHome business = new BusinessHome(businessIdResponse, aliasOfResponse);
-                                businessForScrollbar.add(business);
-                                if(!latitudeOfResponse.equals("") && !longitudeOfResponse.equals("")) {
-                                    BusinessMap businessMap = new BusinessMap(businessIdResponse, aliasOfResponse, streetOfResponse, numberOfResponse, postalOfResponse, latitudeOfResponse, longitudeOfResponse);
-                                    businessForMapMarkers.add(businessMap);
-                                    requestLogos();
-                                }
-                                Log.d("data", business.getAlias());
-                            }
-                             */
-                        }
-                    } else {
-                        Toast.makeText(context, "API Error when requesting partners", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+              byte[] decodedString = Base64.decode(imageOfResponse, Base64.DEFAULT);
+              String imageString = Base64.encodeToString(decodedString, Base64.DEFAULT);
+              CustomCategory newCategory = new CustomCategory(idOfResponse, titleOfResponse, descriptionOfResponse, decodedString);
+              categories.add(newCategory);
             }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                Log.d("Login cache error", errorResponse.toString());
+            CustomDataHolder.DataHolderObject.initCategories(categories);
+          } else {
+            Toast.makeText(context, "API Error when requesting partners", Toast.LENGTH_SHORT).show();
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
+        }
+        
+        homeFragment.passInfoToAdapters();
+        requestCategoryTags();
+      }
+      @Override
+      public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+        Log.d("Login cache error", errorResponse.toString());
+      }
+    });
+  }
+  
+  public void requestCategoryTags() {
+    RequestParams rp = new RequestParams();
+    rp.add("method", "GET_TAGS");
 
+    APIHttpsUtils.post(tagsUrl, rp, new JsonHttpResponseHandler() {
+      @Override
+      public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+        Log.d("POST_GET_TAGS", "---------------- this is response : " + response);
+        List<CustomTag> tags = new ArrayList<>();
+
+        try {
+          JSONObject serverResp = new JSONObject(response.toString());
+          JSONArray data = serverResp.getJSONArray("tags");
+
+          if(data.length() != 0) {
+            for (int i = 0; i < data.length(); i++) {
+              JSONObject partner = data.getJSONObject(i);
+              String idOfResponse = partner.getString("id");
+              String titleOfResponse = partner.getString("title");
+              String descriptionOfResponse = partner.getString("description");
+              String imageOfResponse = partner.getString("encode");
+              String categoryOfResponse = partner.getString("category_ref");
+
+              byte[] decodedString = Base64.decode(imageOfResponse, Base64.DEFAULT);
+              String imageString = Base64.encodeToString(decodedString, Base64.DEFAULT);
+              CustomTag tag = new CustomTag(idOfResponse, titleOfResponse, descriptionOfResponse, decodedString, categoryOfResponse);
+              tags.add(tag);
             }
-        });
+          } else {
+            Toast.makeText(context, "API Error when requesting partners", Toast.LENGTH_SHORT).show();
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
+        }
+        CustomDataHolder.DataHolderObject.initTags(tags);
+      }
+      @Override
+      public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+        Log.d("Login cache error", errorResponse.toString());
+      }
+    });
+  }
+  
+  private void parseImagePartner(String imageOfResponse, String nameOfResponse) {
 
-
+    byte[] decodedString = Base64.decode(imageOfResponse, Base64.DEFAULT);
+    String imageString = Base64.encodeToString(decodedString, Base64.DEFAULT);
+    
+    for(BusinessMap business : businessForMapMarkers) {
+      if(business.getOfficial().equals(nameOfResponse)) {
+        business.setLogoAsync(decodedString, imageString);
+      }
     }
+    CustomDataHolder.DataHolderObject.setLocalBusinesses(businessForMapMarkers);
+  }
 
-    private void parseImage(String imageOfResponse) {
-
-        String image = imageOfResponse.replace("\n", "");
-        byte[] decodedString = Base64.decode(image, Base64.DEFAULT);
-
-        //BitmapFactory.Options options = new BitmapFactory.Options();
-        //Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
-        Drawable imageDrawable = new BitmapDrawable(getResources(),BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length));
-
-        int a = 0;
-    }
-
-    private void sendLocationData(double longitude, double latitude) {
+  private void sendLocationData(double longitude, double latitude) {
 
         RequestParams rp = new RequestParams();
         Log.d("UserLocation:", longitude + String.valueOf(latitude));
@@ -696,26 +848,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    @Override
-    public void onProviderEnabled(@NonNull String provider) {
-
+    public void changeToolbarForBusiness() {
+        getSupportActionBar().setSubtitle(userLocation.getCity());
+        getSupportActionBar().setTitle("Händler - Übersicht");
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(false);
+    }
+    
+    public void changeToolbarForProductBrowser() {
+      getSupportActionBar().setSubtitle("Dein Standort: " + userLocation.getCity());
+      getSupportActionBar().setTitle("Produkt-Browser");
     }
 
-    @Override
-    public void onProviderDisabled(@NonNull String provider) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    public List<BusinessHome> getInfoForHomeFragment() {
-        return new ArrayList<BusinessHome>(this.businessForScrollbar);
-    }
-
-    public List<BusinessMap> getInfoForMapFragment() {
-        return new ArrayList<BusinessMap>(businessForMapMarkers);
-    }
 }

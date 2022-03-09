@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -13,6 +14,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.markat.api.APIHttpsUtils;
+import com.example.markat.models.User;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
@@ -167,7 +169,6 @@ public class RegisterActivity extends AppCompatActivity {
                         Toast.makeText(context, "Nutzer existiert bereits", Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -207,11 +208,16 @@ public class RegisterActivity extends AppCompatActivity {
 
                             JSONObject feedback = data.getJSONObject(i);
                             String isValidResponse = feedback.getString("finished_reg");
-                            String id = feedback.getString("id");
-
                             boolean isRegistered = Boolean.parseBoolean(isValidResponse);
 
                             if(isRegistered) {
+                                String idOfResponse = feedback.getString("id");
+                                String emailOfResponse = feedback.getString("email");
+                                String aliasOfResponse =feedback.getString("alias");
+                                int userId = Integer.parseInt(idOfResponse);
+                                User registeredUser = new User(userId, emailOfResponse, aliasOfResponse);
+
+                                updateSavedUserLogin(registeredUser);
                                 Toast.makeText(context, "Registration successful", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(context, MainActivity.class);
                                 startActivity(intent);
@@ -221,10 +227,7 @@ public class RegisterActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(context, "Registration failed, try later..", Toast.LENGTH_SHORT).show();
                     }
-
-
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -233,4 +236,16 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
     }
+
+  private void updateSavedUserLogin(User user) {
+      
+      SharedPreferences sharedPreferences = getSharedPreferences("UserPreferences",MODE_PRIVATE);
+      SharedPreferences.Editor myEdit = sharedPreferences.edit();
+
+      myEdit.putLong("id", user.getId());
+      myEdit.putString("email", user.getEmail());
+      myEdit.putString("alias", user.getAlias());
+      myEdit.apply();
+    
+  }
 }

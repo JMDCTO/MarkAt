@@ -12,7 +12,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +28,8 @@ import android.widget.Toast;
 
 import com.example.markat.R;
 import com.example.markat.models.BusinessMap;
+import com.example.markat.utils.CustomDataHolder;
+import com.example.markat.utils.CustomFragmentManagement;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,15 +37,14 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link MapFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import static androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_FADE;
+
 public class MapFragment extends Fragment implements ActivityResultCallback {
 
     private Context context;
     ActivityResultLauncher<String[]> requestPermissionLauncher;
+
+    FragmentManager manager;
 
     private double latitude;
     private double longitude;
@@ -54,26 +57,17 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
     WebViewJavaScriptInterface jsInterface;
 
     private boolean present;
+    private Runnable changeToolbar;
 
-    public MapFragment(Context context, ActivityResultLauncher<String[]> requestPermissionLauncher, double latitude, double longitude) {
+    public MapFragment(Context context, ActivityResultLauncher<String[]> requestPermissionLauncher, double latitude, double longitude, Runnable changeToolbar) {
         // Required empty public constructor
         this.context = context;
         this.requestPermissionLauncher = requestPermissionLauncher;
         this.latitude = latitude;
         this.longitude = longitude;
-        jsInterface = new WebViewJavaScriptInterface(context, latitude, longitude);
-    }
+        this.changeToolbar = changeToolbar;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment MapFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MapFragment newInstance(double latitude, double longitude, Context context, ActivityResultLauncher<String[]> requestPermissionLauncher) {
-        MapFragment fragment = new MapFragment(context, requestPermissionLauncher, latitude, longitude);
-        return fragment;
+        jsInterface = new WebViewJavaScriptInterface(context, latitude, longitude);
     }
 
     @Override
@@ -85,6 +79,10 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_map, container, false);
+    }
+
+    public void setManager(FragmentManager manager) {
+        this.manager = manager;
     }
 
     public boolean isPresent() {
@@ -178,8 +176,12 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
             String[] streetNames = new String[markers.size()];
             String[] houseNumbers = new String[markers.size()];
             String[] postalCodes = new String[markers.size()];
+            String[] icons = new String[markers.size()];
 
             for(int i = 0; i < markers.size(); i++) {
+
+                byte[] iconByName = CustomDataHolder.DataHolderObject.getIconByName(markers.get(i).getOfficial());
+                icons[i] = Base64.encodeToString(iconByName, Base64.DEFAULT);
                 names[i] = this.markers.get(i).getAlias();
                 latitudes[i] = Double.parseDouble(this.markers.get(i).getLatitude());
                 longitudes[i] = Double.parseDouble(this.markers.get(i).getLongitude());
@@ -196,6 +198,8 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
             jsInterface.setPostal(postalCodes);
             jsInterface.setCity(city);
 
+            jsInterface.setIcons(icons);
+
         hasAllInformation = true;
     }
 
@@ -204,6 +208,11 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
     }
 
     public void openBusinessActivity(int position) {
+
+        String officialName = markers.get(position).getOfficial();
+        BusinessFragment businessFragment = new BusinessFragment(context, markers.get(position), changeToolbar, manager);
+        manager.beginTransaction().replace(R.id.fragment_container, businessFragment).setTransition(TRANSIT_FRAGMENT_FADE).commit();
+        CustomFragmentManagement.CustomFragmentManager.setFragmentType(CustomFragmentManagement.CustomFragmentManager.FragmentType.BUSINESS);
         Toast.makeText(context, String.valueOf(position), Toast.LENGTH_SHORT).show();
     }
 
@@ -224,6 +233,8 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
 
         double userLatitude;
         double userLongitude;
+
+        String[] icons;
 
         String[] names;
         String[] latitudes;
@@ -253,6 +264,8 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
         public void setNames(String[] names) {
             this.names = names;
         }
+
+        public void setIcons(String[] icons) { this.icons = icons; }
 
         public void setLatitudes(double[] latitudes) {
             String[] stringRep = new String[latitudes.length];
@@ -297,6 +310,23 @@ public class MapFragment extends Fragment implements ActivityResultCallback {
         @JavascriptInterface
         public double getLatitude(){
             return userLatitude;
+        }
+
+        @JavascriptInterface
+        public String getIcons() {
+            JSONArray icons;
+
+            try {
+                JSONArray myArray = new JSONArray(this.icons);
+                icons = myArray;
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                icons = new JSONArray();
+            }
+            String value = icons.toString();
+            Log.d("values", value);
+            return value;
         }
 
         @JavascriptInterface

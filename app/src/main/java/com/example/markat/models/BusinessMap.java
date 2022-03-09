@@ -11,7 +11,10 @@ public class BusinessMap {
 
     String latitude;
     String longitude;
-
+    
+    byte[] logo = null;
+    String logoAsBase64;
+    
     public BusinessMap(String id, String official, String alias, String street, String number, String postal, String lat, String longitude) {
         this.id = id;
         this.alias = alias;
@@ -21,6 +24,19 @@ public class BusinessMap {
         this.postal = postal;
         this.latitude = lat;
         this.longitude = longitude;
+    }
+    
+    public void setLogoAsync(byte[] logo, String base64) {
+      this.logo = logo;
+      this.logoAsBase64 = base64;
+    }
+    
+    public byte[] getLogo() {
+      return this.logo;
+    }
+    
+    public String getLogoAsBase64() {
+      return this.logoAsBase64;
     }
 
     public void setId(String id) {

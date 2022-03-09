@@ -37,7 +37,6 @@ public class LoginActivity extends AppCompatActivity {
     Context context;
 
     private static long userId;
-
     private final String postUrl = "/users";
     private final String postLoginUrl = "/users/sessions";
 
@@ -102,7 +101,6 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(context, "Email oder Passwort falsch", Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -159,7 +157,6 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(context, "API Error when setting login status", Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }

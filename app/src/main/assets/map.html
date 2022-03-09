@@ -6,7 +6,6 @@
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="">
 	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
 
-
 	<style>
 		html, body {
 			height: 100%;
@@ -92,20 +91,7 @@
 		<div class="leaflet-bottom leaflet-left">
 
 		</div>
-		<div class="leaflet-bottom leaflet-right">
-			<div class="leaflet-control-attribution leaflet-control">
-				<a href="https://leafletjs.com" title="A JS library for interactive maps">
-					Leaflet
-				</a>
-				| Map data ©
-				<a href="https://www.openstreetmap.org/copyright">
-					OpenStreetMap
-				</a> contributors, Imagery ©
-				<a href="https://www.mapbox.com/">
-					Mapbox
-				</a>
-			</div>
-		</div>
+
 	</div>
 </div>
 
@@ -121,33 +107,80 @@
 	var postalCodes = JSON.parse(app.getPostal());
 	var city = app.getCity();
 
+	var icons = JSON.parse(app.getIcons());
+
 	var markers = [Latitudes.length];
+
+	const myCustomColour = '#5F779A'
+	const markerHtmlStyles = `
+	  background-color: ${myCustomColour};
+	  width: 3.5rem;
+	  height: 3.5rem;
+	  display: block;
+	  left: -2.5rem;
+	  top: -2.5rem;
+	  position: relative;
+	  border-radius: 3rem 3rem 0;
+	  transform: rotate(45deg);
+	  border: 1px solid #BFFEE875`
+
+	const icon = `
+	  marginTop = "50px";
+	  left: -2.5rem;
+	  top: -2.5rem;
+	  position: relative;
+	  transform: rotate(45deg);`
+
 	var doubleLat = [Latitudes.length];
 	var doubleLong = [Longitudes.length];
 
 	for(let i = 0; i < Latitudes.length; i++) {
 		doubleLat[i] = parseFloat(Latitudes[i]);
 		doubleLong[i] = parseFloat(Longitudes[i]);
-
 	}
 
-	var map = L.map('map').setView([latitude, longitude], 13);
+	var map = L.map('map').setView([latitude, longitude], 14);
 
 	var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
 		maxZoom: 20,
-		attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-			'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+		//attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+		//	'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
 		id: 'mapbox/streets-v11',
 		tileSize: 512,
 		zoomOffset: -1
 	}).addTo(map);
 
 	for(let j = 0; j < doubleLat.length; j++) {
-		var markerMessage = businessNames[j] + "<br /><br />" + streetNames[j] + " " + houseNumbers[j] + "<br />" + postalCodes[j] + ", " + city;
-		markers[j] = L.marker([doubleLat[j], doubleLong[j]]);
+
+		var image = new Image(),
+		containerWidth = 64,
+		containerHeight = 64;
+
+		image.src = "data:image/png;base64," + icons[j];
+
+		const icon = L.divIcon({
+		  className: "my-custom-pin",
+		  iconAnchor: [0, 24],
+		  labelAnchor: [-6, 0],
+		  popupAnchor: [-10, -60],
+		  html: `<span style="${markerHtmlStyles}";></>
+		  		<img class = "mainImg"  src="${image.src}" width="32px" height="32px" style="margin:10px 10px;transform:rotate(-45deg);">
+		  		</span>`
+
+		})
+
+		markers[j] = L.marker([doubleLat[j], doubleLong[j]], {icon: icon});
 
 		var content = L.DomUtil.create('div', 'content');
-		content.innerHTML = "<div id='info'><p id='title'>" + businessNames[j] + "</p><p>" + streetNames[j] + "</p></div>";
+		content.innerHTML = `<div id='info'>` +
+							`<img class = "mainImg"  src="${image.src}" width="32px" height="32px" style="vertical-align:middle;margin:0px 50px;">` +
+							`<p id='title' style='text-align:center;'>` + businessNames[j] + `</p>` +
+							`<p id='street'>` +
+							 streetNames[j] + ` ` + houseNumbers[j] +`</p>` +
+							 `<p id='street'>` +
+							 postalCodes[j] + ` ` + city + `</p>` +
+							 `</div>`;
+
     	var popup = L.popup().setContent(content);
 
 		L.DomEvent.addListener(content, 'click', function(event){

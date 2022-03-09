@@ -20,6 +20,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="28dp"
         android:text="Informationen"
+        android:textColor="@color/custom_grey"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -45,6 +46,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Username:"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider5" />
 
@@ -55,6 +57,7 @@
         android:layout_marginStart="36dp"
         android:layout_marginTop="16dp"
         android:text="TextView"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toEndOf="@+id/textView_acc_alias"
         app:layout_constraintTop_toBottomOf="@+id/divider5" />
 
@@ -65,6 +68,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Email:"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_acc_alias" />
 
@@ -75,6 +79,7 @@
         android:layout_marginStart="64dp"
         android:layout_marginTop="16dp"
         android:text="TextView"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toEndOf="@+id/textView_acc_email"
         app:layout_constraintTop_toBottomOf="@+id/textView_owner_alias" />
 
@@ -85,6 +90,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Passwort:"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_acc_email" />
 
@@ -95,6 +101,7 @@
         android:layout_marginStart="40dp"
         android:layout_marginTop="16dp"
         android:text="TextView"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toEndOf="@+id/textView_acc_password"
         app:layout_constraintTop_toBottomOf="@+id/textView_owner_email" />
 
@@ -117,6 +124,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Dabei seit:"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_acc_password" />
 
@@ -127,6 +135,7 @@
         android:layout_marginStart="36dp"
         android:layout_marginTop="16dp"
         android:text="TextView"
+        android:textColor="@color/custom_grey"
         app:layout_constraintStart_toEndOf="@+id/textView_acc_dateofreg"
         app:layout_constraintTop_toBottomOf="@+id/textView_owner_pwd" />
 
@@ -163,6 +172,8 @@
         android:ems="10"
         android:hint="Straße"
         android:inputType="textPersonName"
+        android:textColor="@color/custom_grey"
+        android:textColorHint="@color/custom_grey"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider6" />
@@ -174,6 +185,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="46dp"
         android:text="Addressdaten"
+        android:textColor="@color/custom_grey"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_owner_date" />
@@ -187,6 +199,8 @@
         android:ems="10"
         android:hint="Nr."
         android:inputType="text"
+        android:textColor="@color/custom_grey"
+        android:textColorHint="@color/custom_grey"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText_street" />
 
@@ -201,6 +215,8 @@
         android:hint="PLZ"
         android:inputType="number"
         android:minHeight="48dp"
+        android:textColor="@color/custom_grey"
+        android:textColorHint="@color/custom_grey"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/editText_postal_number"
         app:layout_constraintTop_toBottomOf="@+id/editText_street" />
@@ -216,6 +232,8 @@
         android:hint="Stadt"
         android:inputType="textPersonName"
         android:minHeight="48dp"
+        android:textColor="@color/custom_grey"
+        android:textColorHint="@color/custom_grey"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText_postal_code" />
@@ -237,6 +255,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="17dp"
         android:hint="nicht verifiziert"
+        android:textColor="@color/custom_grey"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/imageView_address_verification"
@@ -271,6 +290,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:text="Sonstiges"
+        android:textColor="@color/custom_grey"
         android:textSize="20dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_save_address" />

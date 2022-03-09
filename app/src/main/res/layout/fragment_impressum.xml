@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/constraintLayout_impressum"
+  android:layout_width="300dp"
+  android:layout_height="300dp"
+  android:background="@color/main"
+  tools:context=".fragments.ImpressumFragment">
+
+  <!-- TODO: Update blank fragment layout -->
+
+  <Button
+    android:id="@+id/button_close_impressum"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="20dp"
+    android:layout_marginBottom="20dp"
+    android:text="Zurück"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/textView9" />
+
+  <TextView
+    android:id="@+id/textView_contact_email"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="32dp"
+    android:layout_marginTop="20dp"
+    android:hint="abc@web.de"
+    android:textColor="@color/teal_700"
+    android:textColorHint="@color/custom_grey"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.39"
+    app:layout_constraintStart_toEndOf="@+id/textView9"
+    app:layout_constraintTop_toBottomOf="@+id/textView_contact_name" />
+
+  <TextView
+    android:id="@+id/textView_impressum_name"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="52dp"
+    android:text="Impressum"
+    android:textColor="@color/teal_700"
+    android:textSize="20sp"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.498"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+  <TextView
+    android:id="@+id/textView_impressum_contact"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="36dp"
+    android:layout_marginTop="40dp"
+    android:text="Kontakt:"
+    android:textColor="@color/custom_grey"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/divider10" />
+
+  <TextView
+    android:id="@+id/textView9"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="36dp"
+    android:layout_marginTop="20dp"
+    android:text="Email:"
+    android:textColor="@color/custom_grey"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/textView_impressum_contact" />
+
+  <TextView
+    android:id="@+id/textView_contact_name"
+    android:layout_width="0dp"
+    android:layout_height="18dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="40dp"
+    android:hint="Frau Angelina Eckert"
+    android:textColor="@color/teal_700"
+    android:textColorHint="@color/custom_grey"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.431"
+    app:layout_constraintStart_toEndOf="@+id/textView_impressum_contact"
+    app:layout_constraintTop_toBottomOf="@+id/divider10" />
+
+  <View
+    android:id="@+id/divider10"
+    android:layout_width="270dp"
+    android:layout_height="1dp"
+    android:layout_marginStart="24dp"
+    android:layout_marginTop="12dp"
+    android:layout_marginEnd="24dp"
+    android:background="@color/custom_grey"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/textView_impressum_name" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

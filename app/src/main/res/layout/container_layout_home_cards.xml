@@ -7,9 +7,9 @@
     android:layout_width="130dp"
     android:layout_height="wrap_content"
     android:layout_margin="1dp"
-    card_view:cardBackgroundColor="@color/custom_grey"
+    card_view:cardBackgroundColor="#BFFEE875"
     card_view:cardCornerRadius="8dp"
-    card_view:cardElevation="8dp"
+    card_view:cardElevation="0dp"
     card_view:contentPadding="8dp">
 
     <!--Text View over Card View-->

@@ -16,7 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
             android:background="@color/purple_700"
-            android:theme="@style/Theme.LoBuy.ActionBar" />
+            android:theme="@style/Theme.LoBuy.ActionBar"
+            app:navigationIcon="@drawable/ic_baseline_menu_24" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
